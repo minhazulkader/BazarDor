@@ -1,26 +1,77 @@
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@plugin "daisyui" {
+  themes: bazar --default;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@plugin "daisyui/theme" {
+  name: "bazar";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-primary: #1a9951;
+  --color-primary-content: #ffffff;
+  --color-secondary: #05893e;
+  --color-secondary-content: #ffffff;
+  --color-accent: #d03739;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1d271f;
+  --color-neutral-content: #ffffff;
+  --color-base-100: #ffffff;
+  --color-base-200: #f0f5f0;
+  --color-base-300: #e1e8e1;
+  --color-base-content: #1d271f;
+  --color-success: #1a9951;
+  --color-error: #d03739;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --font-bn: "Hind Siliguri", sans-serif;
+  --color-ink: #1d271f;
+  --color-brand: #1a9951;
+  --color-brand-dark: #05893e;
+  --color-brand-soft: #f3fbf4;
+  --color-danger: #d03739;
+  --color-surface: #fafcfa;
+  --color-line: #e1e8e1;
+  --color-canvas: #f0f5f0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-bn);
+  min-height: 100vh;
+}
+
+.section-anchor {
+  scroll-margin-top: 7.5rem;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.ticker:hover .animate-marquee {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
 }
