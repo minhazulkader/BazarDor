@@ -1,76 +1,61 @@
 "use client";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import toast from "react-hot-toast";
-import AuthCard, { Divider } from "@/components/AuthCard";
-import SocialButtons from "@/components/SocialButtons";
-import { signUp } from "@/lib/auth-client";
-import { authErrorMessage } from "@/lib/auth-errors";
+import { useMemo } from "react";
+import Hero from "@/components/Hero";
+import ProductGrid from "@/components/ProductGrid";
+import { GridSkeleton } from "@/components/Skeletons";
+import { useCategories, useProducts } from "@/lib/api";
+import { toBnDigits } from "@/lib/bn";
 
-export default function SignUpPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+export default function HomePage() {
+  const { data: products, loading, error } = useProducts();
+  const { data: categories } = useCategories();
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    let msg = "";
-    if (!name.trim()) msg = "আপনার নাম লিখুন";
-    else if (!/^\S+@\S+\.\S+$/.test(email.trim())) msg = "সঠিক ইমেইল দিন";
-    else if (password.length < 8) msg = "পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে";
-    else if (password !== confirm) msg = "দুটি পাসওয়ার্ড মেলেনি";
-    if (msg) {
-      setError(msg);
-      return toast.error(msg);
-    }
-    setLoading(true);
-    const { error } = await signUp.email({ name: name.trim(), email: email.trim(), password });
-    setLoading(false);
-    if (error) {
-      const m = authErrorMessage(error, "রেজিস্ট্রেশন করা যায়নি");
-      setError(m);
-      return toast.error(m);
-    }
-    toast.success("অ্যাকাউন্ট তৈরি হয়েছে! এখন সাইন ইন করুন");
-    router.push("/signin?registered=1");
-  }
+  const { risers, fallers, marketCount } = useMemo(() => {
+    const list = products ?? [];
+    return {
+      risers: [...list].filter((p) => p.changePct > 0).sort((a, b) => b.changePct - a.changePct).slice(0, 6),
+      fallers: [...list].filter((p) => p.changePct < 0).sort((a, b) => a.changePct - b.changePct).slice(0, 6),
+      marketCount: new Set(list.flatMap((p) => p.markets.map((m) => m.name))).size,
+    };
+  }, [products]);
+
+  const loaded = !loading && !error;
 
   return (
-    <AuthCard title="অ্যাকাউন্ট তৈরি করুন" subtitle="বিনা খরচে সাইন আপ করে সব বিস্তারিত দাম দেখুন।">
-      <form onSubmit={onSubmit} className="space-y-4" noValidate>
-        <label className="form-control">
-          <span className="label-text mb-1 font-medium">নাম</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="যেমন: রহিম উদ্দিন" autoComplete="name" className="input input-bordered w-full bg-white focus:border-brand focus:outline-brand" />
-        </label>
-        <label className="form-control">
-          <span className="label-text mb-1 font-medium">ইমেইল</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" className="input input-bordered w-full bg-white focus:border-brand focus:outline-brand" />
-        </label>
-        <label className="form-control">
-          <span className="label-text mb-1 font-medium">পাসওয়ার্ড</span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="কমপক্ষে ৮ অক্ষর" autoComplete="new-password" className="input input-bordered w-full bg-white focus:border-brand focus:outline-brand" />
-        </label>
-        <label className="form-control">
-          <span className="label-text mb-1 font-medium">পাসওয়ার্ড নিশ্চিত করুন</span>
-          <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="আবার লিখুন" autoComplete="new-password" className="input input-bordered w-full bg-white focus:border-brand focus:outline-brand" />
-        </label>
-        {error && <p role="alert" className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
-        <button type="submit" disabled={loading} className="btn btn-primary w-full text-white">
-          {loading ? <span className="loading loading-spinner loading-sm" /> : "অ্যাকাউন্ট তৈরি করুন"}
-        </button>
-      </form>
-      <Divider />
-      <SocialButtons />
-      <p className="mt-6 text-center text-sm text-ink/70">
-        অ্যাকাউন্ট আছে?{" "}
-        <Link href="/signin" className="font-semibold text-brand-dark hover:underline">সাইন ইন করুন</Link>
-      </p>
-    </AuthCard>
+    <>
+      <Hero products={loaded ? products?.length : undefined} categories={categories?.length} markets={loaded ? marketCount : undefined} />
+
+      <div className="mx-auto max-w-6xl space-y-12 px-4 py-10">
+        {error && (
+          <div role="alert" className="alert alert-error text-white">
+            ডেটা লোড করা যায়নি। অনুগ্রহ করে পেজটি রিলোড করুন।
+          </div>
+        )}
+
+        <section aria-labelledby="risers">
+          <h2 id="risers" className="mb-4 text-xl font-bold sm:text-2xl">
+            আজ দাম বেড়েছে <span className="text-brand-dark">▲</span>
+          </h2>
+          {loading ? <GridSkeleton count={6} /> : <ProductGrid products={risers} cols="" />}
+          {loaded && risers.length === 0 && <p className="text-ink/60">আজ কোনো পণ্যের দাম বাড়েনি।</p>}
+        </section>
+
+        <section aria-labelledby="fallers">
+          <h2 id="fallers" className="mb-4 text-xl font-bold sm:text-2xl">
+            আজ দাম কমেছে <span className="text-danger">▼</span>
+          </h2>
+          {loading ? <GridSkeleton count={6} /> : <ProductGrid products={fallers} cols="" />}
+          {loaded && fallers.length === 0 && <p className="text-ink/60">আজ কোনো পণ্যের দাম কমেনি।</p>}
+        </section>
+
+        <section id="সব-পণ্য" className="section-anchor" aria-labelledby="all">
+          <h2 id="all" className="text-xl font-bold sm:text-2xl">সব পণ্য</h2>
+          <p className="mb-4 text-sm text-ink/60">
+            {loaded ? `মোট ${toBnDigits(products?.length ?? 0)}টি পণ্য দেখানো হচ্ছে` : "পণ্যের তালিকা লোড হচ্ছে…"}
+          </p>
+          {loading ? <GridSkeleton count={8} /> : <ProductGrid products={products ?? []} />}
+        </section>
+      </div>
+    </>
   );
 }
