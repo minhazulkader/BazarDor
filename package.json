@@ -9,15 +9,18 @@
     "auth:migrate": "npx @better-auth/cli@latest migrate --config lib/auth.ts -y"
   },
   "dependencies": {
-    "better-auth": "^1.7.7",
+    "@better-auth/mongo-adapter": "^1.7.18",
+    "better-auth": "^1.7.18",
+    "better-sqlite3": "^12.4.1",
+    "mongodb": "^7.8.0",
     "next": "^15.5.27",
     "pg": "^8.23.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-hot-toast": "^2.6.1",
-    "better-sqlite3": "^12.4.1"
+    "react-hot-toast": "^2.6.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^26.6.4",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
@@ -26,8 +29,7 @@
     "daisyui": "^4.12.24",
     "postcss": "^8.5.29",
     "tailwindcss": "^3.4.19",
-    "typescript": "^5.9.3",
-    "@types/better-sqlite3": "^7.6.13"
+    "typescript": "^5.9.3"
   },
   "allowScripts": {
     "better-sqlite3@12.11.1": true
